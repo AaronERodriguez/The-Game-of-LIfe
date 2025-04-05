@@ -1,7 +1,7 @@
 export default {
     providers: [
       {
-        domain: "https://delicate-jay-28.clerk.accounts.dev",
+        domain: "https://enabled-bluegill-5.clerk.accounts.dev",
         applicationID: "convex",
       },
     ]
