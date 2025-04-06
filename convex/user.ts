@@ -10,7 +10,7 @@ export const create = internalMutation({
         email: v.string(),
     },
     handler: async (ctx, args) => {
-        await ctx.db.insert("users", {...args, followers: []});
+        await ctx.db.insert("users", {...args});
     },
 })
 

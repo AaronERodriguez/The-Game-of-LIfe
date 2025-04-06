@@ -7,6 +7,19 @@ export default defineSchema({
         imageUrl: v.string(),
         clerkId: v.string(),
         email: v.string(),
-        followers: v.optional(v.array(v.id("users")))
-    }).index("by_email", ["email"]).index("by_clerkId", ["clerkId"])
+    }).index("by_email", ["email"]).index("by_clerkId", ["clerkId"]),
+    users_stats: defineTable({
+        userId: v.id("users"),
+        name: v.string(),
+        value: v.number(),
+        decay: v.boolean(),
+    }).index("by_userId", ['userId']),
+    users_tasks: defineTable({
+        userId: v.id("users"),
+        statId: v.id('users_stats'),
+        task: v.string(),
+        frequency: v.number(),
+        timesCompleted: v.number(),
+        value: v.number()
+    }).index('by_userId', ['userId']).index('by_userId_statId', ['userId', 'statId'])
 })
