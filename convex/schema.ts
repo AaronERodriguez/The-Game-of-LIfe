@@ -13,6 +13,7 @@ export default defineSchema({
         name: v.string(),
         value: v.number(),
         decay: v.boolean(),
+        color: v.string()
     }).index("by_userId", ['userId']),
     users_tasks: defineTable({
         userId: v.id("users"),
