@@ -52,5 +52,74 @@ export const getStats = query({args: {}, handler: async (ctx, args) => {
 }  })
 
 //Edit Stat Color
+export const editStat = mutation({args: {statId: v.id('users_stats'), color: v.string()}, handler: async (ctx, args) => {
+    const identity = await ctx.auth.getUserIdentity();
+        
+    if(!identity) {
+        throw new Error("Unauthorized")
+    }
+    
+    const currentUser = await getUsersByClerkId({ctx, clerkId: identity.subject});
+    
+    
+    if (!currentUser) {
+        throw new ConvexError("User not found")
+    }
+
+    //Get the stat
+
+    const stat = await ctx.db.get(args.statId);
+
+    //check that it exists
+    if (!stat) {
+        throw new ConvexError("Stat not found");
+    }
+
+    //check that the user is connected to that stat
+    if (stat.userId !== currentUser._id) {
+        throw new ConvexError("You are not connected to this stat");
+    }
+
+    //Edit the stat to the corresponding color
+    await ctx.db.patch(stat._id, {
+        color: args.color
+    });
+}})
 
 //Delete Stat
+export const deleteStat = mutation({args: {statId: v.id('users_stats')}, handler: async (ctx, args) => {
+    const identity = await ctx.auth.getUserIdentity();
+        
+    if(!identity) {
+        throw new Error("Unauthorized")
+    }
+    
+    const currentUser = await getUsersByClerkId({ctx, clerkId: identity.subject});
+    
+    
+    if (!currentUser) {
+        throw new ConvexError("User not found")
+    }
+
+    //Get the stat
+
+    const stat = await ctx.db.get(args.statId);
+
+    //check that it exists
+    if (!stat) {
+        throw new ConvexError("Stat not found");
+    }
+
+    //check that the user is connected to that stat
+    if (stat.userId !== currentUser._id) {
+        throw new ConvexError("You are not connected to this stat");
+    }
+
+    //Get all the tasks, if existant, of that stat
+    const tasks = await ctx.db.query('users_tasks').withIndex('by_userId_statId', q=>q.eq('userId', currentUser._id).eq('statId', stat._id)).collect();
+
+    //Delete the stat and all tasks related to the stat:
+    await Promise.all(tasks.map(async task => await ctx.db.delete(task._id)));
+
+    await ctx.db.delete(stat._id);
+}})
