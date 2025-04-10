@@ -2,7 +2,7 @@ import { ConvexError, v } from "convex/values";
 import { mutation, query } from "./_generated/server";
 import { getUsersByClerkId } from "./_utils";
 
-export const createStat = mutation({args: {
+export const create = mutation({args: {
     name: v.string(),
     decay: v.boolean(),
     color: v.string(),
@@ -32,7 +32,7 @@ export const createStat = mutation({args: {
 
 //Get Stats by User
 
-export const getStats = query({args: {}, handler: async (ctx, args) => {
+export const get = query({args: {}, handler: async (ctx, args) => {
     const identity = await ctx.auth.getUserIdentity();
         
     if(!identity) {
@@ -52,7 +52,7 @@ export const getStats = query({args: {}, handler: async (ctx, args) => {
 }  })
 
 //Edit Stat Color
-export const editStat = mutation({args: {statId: v.id('users_stats'), color: v.string()}, handler: async (ctx, args) => {
+export const edit = mutation({args: {statId: v.id('users_stats'), color: v.string()}, handler: async (ctx, args) => {
     const identity = await ctx.auth.getUserIdentity();
         
     if(!identity) {
@@ -116,7 +116,7 @@ export const deleteStat = mutation({args: {statId: v.id('users_stats')}, handler
     }
 
     //Get all the tasks, if existant, of that stat
-    const tasks = await ctx.db.query('users_tasks').withIndex('by_userId_statId', q=>q.eq('userId', currentUser._id).eq('statId', stat._id)).collect();
+    const tasks = await ctx.db.query('users_tasks').withIndex('by_statId', q=>q.eq('statId', stat._id)).collect();
 
     //Delete the stat and all tasks related to the stat:
     await Promise.all(tasks.map(async task => await ctx.db.delete(task._id)));

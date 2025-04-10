@@ -19,8 +19,9 @@ export default defineSchema({
         userId: v.id("users"),
         statId: v.id('users_stats'),
         task: v.string(),
-        frequency: v.number(),
+        frequency: v.string(),
         timesCompleted: v.number(),
-        value: v.number()
-    }).index('by_userId', ['userId']).index('by_userId_statId', ['userId', 'statId'])
+        value: v.number(),
+        completedToday: v.boolean()
+    }).index('by_userId', ['userId']).index('by_statId', ['statId'])
 })
