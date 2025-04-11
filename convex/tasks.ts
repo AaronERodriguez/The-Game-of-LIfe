@@ -106,8 +106,96 @@ export const getByStat = query({args: {statId: v.id('users_stats')}, handler: as
 
 //Edit task name
 
-//Delete task
+export const editName = mutation({args: {taskId: v.id('users_tasks'), name: v.string()}, handler: async (ctx, args) => {
+    const identity = await ctx.auth.getUserIdentity();
+        
+    if(!identity) {
+        throw new Error("Unauthorized")
+    }
+    
+    const currentUser = await getUsersByClerkId({ctx, clerkId: identity.subject});
+    
+    
+    if (!currentUser) {
+        throw new ConvexError("User not found")
+    }
 
+    const task = await ctx.db.get(args.taskId);
+    if (!task) {
+        throw new ConvexError("Task not found");
+    }
+    if (task.userId !== currentUser._id) {
+        throw new ConvexError("Task not found");
+    }
+
+    //change the name
+    await ctx.db.patch(task._id, {
+        task: args.name
+    })
+}})
+
+//Delete task
+export const deleteTask = mutation({args: {taskId: v.id('users_tasks')}, handler: async (ctx, args) => {
+    const identity = await ctx.auth.getUserIdentity();
+        
+    if(!identity) {
+        throw new Error("Unauthorized")
+    }
+    
+    const currentUser = await getUsersByClerkId({ctx, clerkId: identity.subject});
+    
+    
+    if (!currentUser) {
+        throw new ConvexError("User not found")
+    }
+
+    //check that the user is the owner of the task
+    const task = await ctx.db.get(args.taskId);
+
+    if (!task) {
+        throw new ConvexError("Task not found");
+    }
+    if (task.userId !== currentUser._id) {
+        throw new ConvexError("Task not linked to user");
+    }
+
+    //Delete the task:
+    await ctx.db.delete(task._id);
+
+}})
 //Edit frequency
+export const editFrequency = mutation({args: {taskId: v.id('users_tasks'), frequency: v.string()}, handler: async (ctx, args) => {
+    const identity = await ctx.auth.getUserIdentity();
+        
+    if(!identity) {
+        throw new Error("Unauthorized")
+    }
+    
+    const currentUser = await getUsersByClerkId({ctx, clerkId: identity.subject});
+    
+    
+    if (!currentUser) {
+        throw new ConvexError("User not found")
+    }
+
+    const task = await ctx.db.get(args.taskId);
+    if (!task) {
+        throw new ConvexError("Task not found");
+    }
+    if (task.userId !== currentUser._id) {
+        throw new ConvexError("Task not found");
+    }
+
+    //Regular expression that checks that frequency has 7 characters, each either a 1 or a 0.
+    const regex = /^[01]{7}$/;
+
+    if (!regex.test(args.frequency)) {
+        throw new ConvexError("Frequency isn't formatted properly")
+    }
+
+    await ctx.db.patch(task._id, {
+        frequency: args.frequency
+    })
+}})
 
 //Complete task for the day
