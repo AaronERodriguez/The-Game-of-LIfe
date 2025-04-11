@@ -199,3 +199,48 @@ export const editFrequency = mutation({args: {taskId: v.id('users_tasks'), frequ
 }})
 
 //Complete task for the day
+
+export const complete = mutation({args: {taskId: v.id('users_tasks')}, handler: async (ctx, args) => {
+    const identity = await ctx.auth.getUserIdentity();
+        
+    if(!identity) {
+        throw new Error("Unauthorized")
+    }
+    
+    const currentUser = await getUsersByClerkId({ctx, clerkId: identity.subject});
+    
+    
+    if (!currentUser) {
+        throw new ConvexError("User not found")
+    }
+
+    //Check that the tasks exists and is linked to the user:
+    const task = await ctx.db.get(args.taskId);
+    if (!task) {
+        throw new ConvexError("Task not found");
+    }
+    if (task.userId !== currentUser._id) {
+        throw new ConvexError("Task not found");
+    }
+
+    //Check that the task hasn't been completed today
+    if (task.completedToday) {
+        throw new ConvexError("Task already completed today");
+    };
+
+    //get the stat related to this stat
+    const stat = await ctx.db.get(task.statId);
+
+    if (!stat) {
+        throw new ConvexError("Stat not found");
+    }
+
+    //Mark the task as completed and add values to the corresponding stat.
+    await ctx.db.patch(task._id, {
+        completedToday: true,
+    })
+
+    await ctx.db.patch(stat._id, {
+        value: stat.value + task.value
+    })
+}})
