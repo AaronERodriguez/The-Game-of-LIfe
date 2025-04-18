@@ -1,5 +1,5 @@
 import { ConvexError, v } from "convex/values";
-import { mutation, query } from "./_generated/server";
+import { internalMutation, mutation, query } from "./_generated/server";
 import { getUsersByClerkId } from "./_utils";
 
 export const create = mutation({args: {
@@ -122,4 +122,27 @@ export const deleteStat = mutation({args: {statId: v.id('users_stats')}, handler
     await Promise.all(tasks.map(async task => await ctx.db.delete(task._id)));
 
     await ctx.db.delete(stat._id);
+}})
+
+export const decay = internalMutation({args : {}, handler: async (ctx, args) => {
+    //Get all stats
+    const stats = await ctx.db.query('users_stats').collect();
+
+    //Loops through each stat
+    await Promise.all(stats.map(async stat => {
+        //If the stat doesn't decay, skip
+        if (stat.decay) {
+            //Get tasks and check if one was not completed today
+            const tasks = await ctx.db.query('users_tasks').withIndex('by_statId', q=>q.eq('statId', stat._id)).collect();
+            if (!(tasks.some(task => task.completedToday === true))) {
+                //If failed to complete, and the value of the stat is greater than 1, remove 1 from the value of the stat
+                if (stat.value > 0) {
+                    await ctx.db.patch(stat._id, {
+                        value: stat.value - 1
+                    })
+                }
+            }
+        }
+    }))
+
 }})

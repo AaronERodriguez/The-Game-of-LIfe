@@ -57,8 +57,11 @@ export const getUser = query({args: {}, handler: async (ctx, args) => {
     if (!currentUser) {
         throw new ConvexError("User not found")
     }
+
+    //obtain the stats related to this user:
+    const stats = await ctx.db.query('users_stats').withIndex('by_userId', q=>q.eq("userId", currentUser._id)).collect();
     
-    return currentUser
+    return {...currentUser, stats}
 }})
 
 export const getOtherUser = query({args: {

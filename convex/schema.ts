@@ -14,7 +14,7 @@ export default defineSchema({
         value: v.number(),
         decay: v.boolean(),
         color: v.string()
-    }).index("by_userId", ['userId']),
+    }).index("by_userId", ['userId']).index("by_decay", ['decay']),
     users_tasks: defineTable({
         userId: v.id("users"),
         statId: v.id('users_stats'),
