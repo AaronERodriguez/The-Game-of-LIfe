@@ -125,13 +125,11 @@ export const deleteStat = mutation({args: {statId: v.id('users_stats')}, handler
 }})
 
 export const decay = internalMutation({args : {}, handler: async (ctx, args) => {
-    //Get all stats
-    const stats = await ctx.db.query('users_stats').collect();
+    //Get all stats that have decay set to true
+    const stats = await ctx.db.query('users_stats').withIndex('by_decay', q=>q.eq('decay', true)).collect();
 
     //Loops through each stat
     await Promise.all(stats.map(async stat => {
-        //If the stat doesn't decay, skip
-        if (stat.decay) {
             //Get tasks and check if one was not completed today
             const tasks = await ctx.db.query('users_tasks').withIndex('by_statId', q=>q.eq('statId', stat._id)).collect();
             if (!(tasks.some(task => task.completedToday === true))) {
@@ -142,7 +140,6 @@ export const decay = internalMutation({args : {}, handler: async (ctx, args) => 
                     })
                 }
             }
-        }
     }))
 
 }})

@@ -25,8 +25,23 @@ export const get = internalQuery({
 export const deleteFromClerk = internalMutation({
     args: { clerkUserId: v.string() },
     async handler(ctx, { clerkUserId }) {
-        const user = await userByExternalId(ctx, clerkUserId)
+        const user = await userByExternalId(ctx, clerkUserId);
         
+        //check that the user exists
+        if (!user) {
+            throw new ConvexError("User not found")
+        }
+
+        //Delete tasks related to user
+        const tasks = await ctx.db.query('users_tasks').withIndex('by_userId', q=>q.eq('userId', user._id)).collect();
+        await Promise.all(tasks.map(async task => ctx.db.delete(task._id)));
+        
+        //Delete the stats related to the user
+        const stats = await ctx.db.query('users_stats').withIndex('by_userId', q=>q.eq('userId', user._id)).collect();
+        await Promise.all(stats.map(async stat => ctx.db.delete(stat._id)));
+
+        
+        //Delete the user
         if (user !== null) {
             await ctx.db.delete(user._id);
         } else {
