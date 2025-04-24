@@ -27,7 +27,9 @@ export default function RootLayout({
           >
         <ConvexClientProvider>
           <NavBar />
-            {children}
+            <div className="p-1">
+              {children}
+            </div>
           
         </ConvexClientProvider>
         </ThemeProvider>

@@ -63,14 +63,14 @@ export const getUser = query({args: {}, handler: async (ctx, args) => {
     const identity = await ctx.auth.getUserIdentity();
     
     if(!identity) {
-        throw new Error("Unauthorized")
+        return null;
     }
     
     const currentUser = await getUsersByClerkId({ctx, clerkId: identity.subject});
     
     
     if (!currentUser) {
-        throw new ConvexError("User not found")
+        return null;
     }
 
     //obtain the stats related to this user:
